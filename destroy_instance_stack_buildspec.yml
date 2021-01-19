@@ -1,0 +1,18 @@
+version: 0.2
+phases:
+  build:
+    commands:
+      - echo $STACK_ID
+      - terraform init
+      - terraform workspace select $STACK_ID
+      - |
+        terraform destroy \
+          -var "source_version=$CODEBUILD_SOURCE_VERSION" \
+          -var "environment=$ENVIRONMENT" \
+          -var "stack_id=$STACK_ID" \
+          -var "table_name=$TABLE_NAME" \
+          -var "instance_type=$INSTANCE_TYPE" \
+          -var "security_group_ids=[$SECURITY_GROUP_IDS]" \
+          -var "template_name=""" \
+          -var "template_vars={}" \
+          -auto-approve

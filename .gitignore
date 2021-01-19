@@ -1,0 +1,6 @@
+*.tfstate
+.idea
+**/.venv/
+.project
+.terraform
+**/deployment_code.zip
