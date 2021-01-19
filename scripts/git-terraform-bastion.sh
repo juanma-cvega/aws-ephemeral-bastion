@@ -73,7 +73,6 @@ if [ -z "${PASSWORD}" ]; then echo "Password not set. Please, add -p variable wh
 echo "Environment selected: $ENVIRONMENT"
 echo "AWS region selected: $AWS_REGION"
 echo "Username selected: $USERNAME"
-echo "Password selected: $PASSWORD"
 echo "Terraform version selected: $TERRAFORM_VERSION"
 
 capitalized_environment="$(tr '[:lower:]' '[:upper:]' <<< ${ENVIRONMENT:0:1})${ENVIRONMENT:1}"

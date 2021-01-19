@@ -5,9 +5,9 @@ AWS_REGION=eu-west-1
 usage() {
   echo ""
   echo "The script can read the variables AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY and AWS_SESSION_TOKEN from the "
-  echo "environment. If these are available their values are copied to the EC2 instance created."
+  echo "environment. "
   echo "Usage: $0 -e env -r region -h help"
-  echo -e "\t-e Environment to connect to. Valid options are test, sandbox, staging or production."
+  echo -e "\t-e Environment to connect to."
   echo -e "\t-r AWS region the instance is deployed on. Defaults to eu-west-1"
   echo -e "\t-h Shows this help."
   exit 1 # Exit script after printing help

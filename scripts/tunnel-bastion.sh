@@ -16,7 +16,7 @@ usage() {
 }
 
 get_database_url() {
-  echo "rds.$1.dreev.net:5432"
+  echo "to be provided"
 }
 
 get_instance_id() {

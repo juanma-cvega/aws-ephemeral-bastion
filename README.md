@@ -35,3 +35,15 @@ backend configuration to be parameterised.
     block. This is optional as it's meant to further increase security, 
     a single route table with routes to every peered environment would
      also work.
+
+## Usage
+
+To simplify usage of this infrastructure, 3 scripts are provided under the 
+'scripts' folder. 
+- create-bastion.sh. It creates a bastion host and connects to it. 
+- git-terraform-bastion.sh. It creates a bastion host with Git and Terraform 
+already installed.
+- tunnel-bastion.sh. It creates a bastion host with the socat service installed.
+It then creates a tunnel from the host to the database URL provided in the 
+script. Once created, it connects to the host with a port forwarding document
+to redirect calls to the specified port to the database. 
