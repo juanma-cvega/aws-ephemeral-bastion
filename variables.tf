@@ -1,8 +1,15 @@
+variable ami_creation {
+  description = "Configuration required to create a pipeline to create a base AMI for the bastion."
+  type = object({
+    name              = string
+    pipeline_schedule = string
+    subnet_id         = string
+    vpc_id            = string
+  })
+}
+
 variable build_image {
-  description = <<EOF
-  Image to be used by CodeBuild to create and destroy instance stacks. It requires to have Terraform
-installed with a version higher or equal to 0.13.
-EOF
+  description = "Image to be used by CodeBuild to create and destroy instance stacks."
   type        = string
 }
 
@@ -22,7 +29,7 @@ variable created_instances_table_name {
 }
 
 variable credentials {
-  description = "Credentials to access external services. CodeBuild used DockerHub to download the execution image."
+  description = "Credentials to access external services."
   type = object({
     docker_hub_arn = string
   })
@@ -39,7 +46,7 @@ variable environments {
 }
 
 variable instance_type {
-  description = "EC2 instance type to deploy."
+  description = "EC2 instance type to deploy"
   type        = string
 }
 
@@ -49,11 +56,7 @@ variable live_time_minutes {
 }
 
 variable resources {
-  description = <<EOF
-  Information to access and store common resources. The bucket information is used to create a bucket
-where the Terraform code is deployed and the prefix to use for the tfstate files created. The principal
-ARNs are used to grant access to these principals and to deny access to everyone else.
-EOF
+  description = "Information to access and store common resources."
   type = object({
     bucket = object({
       code_key      = string

@@ -12,7 +12,7 @@ cat >> /etc/systemd/system/socat.database.tunnel.service << EOF
 Description=Forwards localhost:${FORWARD_PORT} to ${DATABASE_URL}
 
 [Service]
-ExecStart=/usr/bin/socat TCP4-LISTEN:${FORWARD_PORT},fork TCP4:${DATABASE_URL}
+ExecStart=/usr/bin/socat TCP-LISTEN:${FORWARD_PORT},fork TCP:${DATABASE_URL}
 
 [Install]
 WantedBy=multi-user.target

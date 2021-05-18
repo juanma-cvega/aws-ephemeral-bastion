@@ -77,7 +77,8 @@ data aws_iam_policy_document destroy_idle_instances_lambda {
   }
   statement {
     actions = [
-      "ssm:DescribeSessions"
+      "ssm:DescribeSessions",
+      "ec2:DescribeInstanceStatus"
     ]
     effect    = "Allow"
     resources = ["*"]

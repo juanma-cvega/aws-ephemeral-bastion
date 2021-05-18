@@ -6,21 +6,46 @@ CODEBUILD_JOB = os.environ['CODEBUILD_JOB']
 
 DYNAMODB = boto3.resource('dynamodb')
 TABLE = DYNAMODB.Table(TABLE_NAME)
+EC2 = boto3.client('ec2')
 SSM = boto3.client('ssm')
 CODEBUILD = boto3.client('codebuild')
 
 
-def is_instance_idle():
-    return lambda instance: len(SSM.describe_sessions(
+def is_instance_up(instance):
+    running = len(EC2.describe_instance_status(
+        Filters=[
+            {
+                'Name': 'system-status.status',
+                'Values': ['ok']
+            }
+        ],
+        InstanceIds=[instance['InstanceId']]
+    )['InstanceStatuses']) > 0
+    print(f"Instance is running: instance={instance['InstanceId']}, running={running}")
+    return running
+
+
+def has_no_sessions(instance):
+    sessions = len(SSM.describe_sessions(
         State='Active',
-        MaxResults=1,
+        MaxResults=100,
         Filters=[
             {
                 'key': 'Target',
                 'value': instance["InstanceId"]
+            },
+            {
+                'key': 'Status',
+                'value': 'Connected'
             }
         ]
-    )["Sessions"]) == 0
+    )["Sessions"])
+    print(f"Instance connected sessions: instance={instance['InstanceId']}, sessions={sessions}")
+    return sessions == 0
+
+
+def is_instance_idle():
+    return lambda instance: is_instance_up(instance) and has_no_sessions(instance)
 
 
 def get_registered_instances():
@@ -53,7 +78,8 @@ def delete_idle_instance(instance):
 def delete_idle_instances():
     instances = get_registered_instances()
     idle_instances = find_idle_instances(instances)
-    print(f"Found idle instances: count={len(idle_instances)}")
+    instance_names = [instance["InstanceId"] for instance in idle_instances]
+    print(f"Found idle instances: count={len(idle_instances)}, instances={instance_names}")
     for instance in idle_instances:
         delete_idle_instance(instance)
 

@@ -43,6 +43,11 @@ variable template_vars {
   type        = map(string)
 }
 
+variable ami_name {
+  description = "Name of the AMI to search for."
+  default     = "ephemeral-bastion-"
+}
+
 variable role_name_prefix {
   description = "Prefix to add to the stack ID as the name for the instance profile created."
   default     = "TemporaryBastionSSMAccess"

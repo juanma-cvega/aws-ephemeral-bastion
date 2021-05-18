@@ -1,4 +1,5 @@
 locals {
+  ami_name_filter            = "${var.ami_name}*"
   instance_role_name         = "${var.role_name_prefix}-${var.stack_id}"
   session_manager_policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
   subnet_name                = "Access${title(var.environment)}"
@@ -7,21 +8,13 @@ locals {
   : null)
 }
 
-data aws_ami amazon-linux-2 {
+data aws_ami this {
   most_recent = true
-  owners      = ["amazon"]
+  owners      = ["self"]
 
   filter {
     name   = "name"
-    values = ["amzn2-ami-hvm*-x86_64-gp2"]
-  }
-  filter {
-    name   = "root-device-type"
-    values = ["ebs"]
-  }
-  filter {
-    name   = "virtualization-type"
-    values = ["hvm"]
+    values = [local.ami_name_filter]
   }
 }
 
@@ -61,14 +54,14 @@ resource aws_iam_role_policy_attachment session_manager_access {
 }
 
 resource aws_instance this {
-  ami                  = data.aws_ami.amazon-linux-2.id
-  iam_instance_profile = aws_iam_instance_profile.this.name
-  instance_type        = var.instance_type
-  subnet_id            = data.aws_subnet.this.id
+  ami           = data.aws_ami.this.id
+  instance_type = var.instance_type
+  subnet_id     = data.aws_subnet.this.id
   tags = merge({
     Name    = var.stack_id
     StackId = var.stack_id
   }, var.tags)
+  iam_instance_profile   = aws_iam_instance_profile.this.name
   user_data              = local.user_data
   vpc_security_group_ids = var.security_group_ids
 }
