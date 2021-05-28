@@ -2,7 +2,7 @@
 
 unset ENVIRONMENT
 AWS_REGION=eu-west-1
-TERRAFORM_VERSION=0.13.4
+TERRAFORM_VERSION=0.13.5
 
 usage() {
   echo ""
@@ -46,11 +46,15 @@ invoke_lambda() {
   --payload "$payload" \
   --region "$AWS_REGION" \
   --cli-binary-format raw-in-base64-out \
-  response.json &>/dev/null
+  response.json &> result.txt
 
-  echo "$(cat response.json | jq '.body.stack_id' | tr -d \")"
-
-  rm -rf response.json
+  if test -f "response.json"; then
+    echo "$(cat response.json | jq '.body.stack_id' | tr -d \")"
+    rm -rf response.json
+  else
+    echo  "ERROR: Unable to invoke lambda function. $(cat result.txt)"
+  fi
+  rm -rf result.txt
 }
 
 
@@ -73,13 +77,15 @@ if [ -z "${PASSWORD}" ]; then echo "Password not set. Please, add -p variable wh
 echo "Environment selected: $ENVIRONMENT"
 echo "AWS region selected: $AWS_REGION"
 echo "Username selected: $USERNAME"
+echo "Password selected: $PASSWORD"
 echo "Terraform version selected: $TERRAFORM_VERSION"
 
 capitalized_environment="$(tr '[:lower:]' '[:upper:]' <<< ${ENVIRONMENT:0:1})${ENVIRONMENT:1}"
 STACK_ID=$(invoke_lambda "$capitalized_environment")
 
-if [ -n "${STACK_ID}" ]; then
-
+if [[ "${STACK_ID}" == ERROR:* ]]; then
+  echo "$STACK_ID"
+else
   echo "StackId: $STACK_ID"
   echo "Waiting for instance stack to be created..."
 
@@ -115,6 +121,4 @@ if [ -n "${STACK_ID}" ]; then
   else
     echo "Unable to get an instance ID. The creation stack failed."
   fi
-else
-  echo "Unable to get a stack ID. The lambda invocation failed."
 fi

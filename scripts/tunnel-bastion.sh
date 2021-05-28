@@ -16,7 +16,7 @@ usage() {
 }
 
 get_database_url() {
-  echo "to be provided"
+  echo "rds.$1.dreev.net:5432"
 }
 
 get_instance_id() {
@@ -50,11 +50,15 @@ invoke_lambda() {
   --payload "$payload" \
   --region "$AWS_REGION" \
   --cli-binary-format raw-in-base64-out \
-  response.json &>/dev/null
+  response.json &> result.txt
 
-  echo "$(cat response.json | jq '.body.stack_id' | tr -d \")"
-
-  rm -rf response.json
+  if test -f "response.json"; then
+    echo "$(cat response.json | jq '.body.stack_id' | tr -d \")"
+    rm -rf response.json
+  else
+    echo  "ERROR: Unable to invoke lambda function. $(cat result.txt)"
+  fi
+  rm -rf result.txt
 }
 
 
@@ -79,8 +83,9 @@ echo "Local port selected: $LOCAL_PORT"
 capitalized_environment="$(tr '[:lower:]' '[:upper:]' <<< ${ENVIRONMENT:0:1})${ENVIRONMENT:1}"
 STACK_ID=$(invoke_lambda "$capitalized_environment")
 
-if [ -n "${STACK_ID}" ]; then
-
+if [[ "${STACK_ID}" == ERROR:* ]]; then
+  echo "$STACK_ID"
+else
   echo "StackId: $STACK_ID"
   echo "Waiting for instance stack to be created..."
 
@@ -120,6 +125,4 @@ if [ -n "${STACK_ID}" ]; then
   else
     echo "Unable to get an instance ID. The creation stack failed."
   fi
-else
-  echo "Unable to get a stack ID. The lambda invocation failed."
 fi

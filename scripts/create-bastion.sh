@@ -5,9 +5,9 @@ AWS_REGION=eu-west-1
 usage() {
   echo ""
   echo "The script can read the variables AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY and AWS_SESSION_TOKEN from the "
-  echo "environment. "
+  echo "environment. If these are available their values are copied to the EC2 instance created."
   echo "Usage: $0 -e env -r region -h help"
-  echo -e "\t-e Environment to connect to."
+  echo -e "\t-e Environment to connect to. Valid options are test, sandbox, staging or production."
   echo -e "\t-r AWS region the instance is deployed on. Defaults to eu-west-1"
   echo -e "\t-h Shows this help."
   exit 1 # Exit script after printing help
@@ -30,11 +30,15 @@ invoke_lambda() {
   --function-name "$(get_lambda_name "$1")" \
   --region "$AWS_REGION" \
   --cli-binary-format raw-in-base64-out \
-  response.json &>/dev/null
+  response.json &> result.txt
 
-  echo "$(cat response.json)"
-
-  rm -rf response.json
+  if test -f "response.json"; then
+    echo "$(cat response.json | jq '.body.stack_id' | tr -d \")"
+    rm -rf response.json
+  else
+    echo  "ERROR: Unable to invoke lambda function. $(cat result.txt)"
+  fi
+  rm -rf result.txt
 }
 
 while getopts ":e:r:h" opt; do
@@ -52,12 +56,11 @@ echo "Environment selected: $ENVIRONMENT"
 echo "AWS region selected: $AWS_REGION"
 
 capitalized_environment="$(tr '[:lower:]' '[:upper:]' <<< ${ENVIRONMENT:0:1})${ENVIRONMENT:1}"
-RESPONSE=$(invoke_lambda "$capitalized_environment")
+STACK_ID=$(invoke_lambda "$capitalized_environment")
 
-BUILD_ID="$(echo "$RESPONSE" | jq '.body.build_id' | tr -d \")"
-
-if [ -n "${BUILD_ID}" ]; then
-  STACK_ID="$(echo "$RESPONSE" | jq '.body.stack_id' | tr -d \")"
+if [[ "${STACK_ID}" == ERROR:* ]]; then
+  echo "$STACK_ID"
+else
   echo "StackId: $STACK_ID"
   echo "Waiting for instance stack to be created..."
 
@@ -68,7 +71,7 @@ if [ -n "${BUILD_ID}" ]; then
   do
      INSTANCE_ID=$(get_instance_id "$AWS_REGION" "$STACK_ID")
      if [ -n "${INSTANCE_ID}" ]; then break; fi
-     n=$((n+1))
+     n=$((n+5))
      if ! ((n % 10)); then echo "Still waiting... $n seconds";fi
      sleep 5
   done
@@ -93,6 +96,4 @@ if [ -n "${BUILD_ID}" ]; then
   else
     echo "Unable to get an instance ID. The creation stack failed."
   fi
-else
-  echo "Unable to get a stack ID. The lambda invocation failed."
 fi
