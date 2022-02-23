@@ -1,4 +1,4 @@
-#AWS Ephemeral bastions
+# AWS Ephemeral bastions
 
 ## Description
 The following module creates the required infrastructure to provision 
